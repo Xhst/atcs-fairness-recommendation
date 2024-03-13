@@ -3,7 +3,7 @@ import os
 import pandas as pd
 import math
 
-class MovieLensDataSet:
+class UserBasedCFR:
     def __init__(self):
         project_folder = os.path.dirname(__file__) + '/../'
         dataset_path = os.path.join(project_folder, 'dataset', 'movielens-edu')
@@ -77,7 +77,7 @@ class MovieLensDataSet:
         
 
 if __name__ == '__main__':
-    m = MovieLensDataSet()
+    m = UserBasedCFR()
 
     m.display_dataset_first_rows()
 
