@@ -25,14 +25,6 @@ class UserBasedCollaborativeFiltering:
         Returns:
             float: Pearson Correlation Coefficient between the two users.
         """
-        '''
-        Pearson Correlation Coefficient
-
-        Measures linear correlation between two sets of data.
-        It's the ratio between the covariance of two variables and the product of their standard deviations.
-        It's a normalized measurement of the covariance, such that the result always has a value between −1 and 1.
-        '''     
-
         # Find common movies rated by both users
         common_movies = self.dataset.get_common_movies(user1, user2)
 
