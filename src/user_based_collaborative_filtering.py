@@ -71,3 +71,32 @@ class UserBasedCollaborativeFiltering:
         if denominator == 0: return 0
         
         return self.dataset.get_user_mean_rating(user) + (numerator / denominator)
+    
+
+    def top_n_similar_users(self, user: int, similarity_function = None, n: int = 10) -> list:
+        """
+        Finds the top N similar users to a given user based on a similarity function.
+
+        Args:
+            user (int): ID of the user.
+            similarity_function (function, optional): Function to compute similarity between users. 
+                Defaults to sim_pcc.
+            n (int, optional): Number of similar users to find. Defaults to 10.
+
+        Returns:
+            List: List of tuples containing similar user IDs and their corresponding similarity scores.
+        """
+        if similarity_function is None:
+            similarity_function = self.sim_pcc
+        
+        ls = []
+        
+        for other_user in self.dataset.get_users():
+            if user == other_user: continue
+
+            ls.append((other_user, self.similarities[user][other_user]))
+
+        # Sort the users by similarity in descending order
+        ls.sort(key=lambda x: x[1], reverse=True)    
+
+        return ls[:n]
