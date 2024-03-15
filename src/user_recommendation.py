@@ -44,6 +44,17 @@ class UserRecommendation:
     
     @staticmethod
     def prediction_from_neighbors(user: int, movie: int, neighbors: list[tuple[int, float]]) -> float:
+        """
+        Predicts the rating for a movie by a user based on the ratings of similar users.
+
+        Args:
+            user (int): ID of the user.
+            movie (int): ID of the movie.
+            neighbors (list[tuple[int, float]]): List of tuples containing IDs of similar users and their similarity scores.
+
+        Returns:
+            float: Predicted rating for the movie by the user.
+        """
         numerator = 0
         denominator = 0
 
