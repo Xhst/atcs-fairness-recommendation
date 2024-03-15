@@ -35,9 +35,9 @@ class GroupRecommendation:
     def least_misery_aggregation(users: set[int], n: int = 10) -> list[(int, float)]:
         users_rec = GroupRecommendation.aggregate_users_recommendations(users)
 
-        avg_rec: list[(int, float)] = []
+        least_misery_rec: list[(int, float)] = []
 
         for movie, predicted_ratings in users_rec.items():
-            avg_rec.append((movie, min(predicted_ratings)))
+            least_misery_rec.append((movie, min(predicted_ratings)))
 
-        return avg_rec[:n]
+        return least_misery_rec[:n]
