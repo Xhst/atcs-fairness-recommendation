@@ -1,6 +1,4 @@
 from user_recommendation import UserRecommendation
-import dataset
-import math 
 
 class GroupRecommendation:
 
@@ -20,10 +18,10 @@ class GroupRecommendation:
         return aggregate_recommendations
     
 
-    def avarage_aggregation(users: set[int], n: int = 10) -> list[(int, float)]:
+    def avarage_aggregation(users: set[int], n: int = 10) -> list[tuple[int, float]]:
         users_rec = GroupRecommendation.aggregate_users_recommendations(users)
 
-        avg_rec: list[(int, float)] = []
+        avg_rec: list[tuple[int, float]] = []
 
         for movie, predicted_ratings in users_rec.items():
             avarage = sum(predicted_ratings) / len(predicted_ratings)
@@ -32,10 +30,10 @@ class GroupRecommendation:
         return avg_rec[:n]
     
 
-    def least_misery_aggregation(users: set[int], n: int = 10) -> list[(int, float)]:
+    def least_misery_aggregation(users: set[int], n: int = 10) -> list[tuple[int, float]]:
         users_rec = GroupRecommendation.aggregate_users_recommendations(users)
 
-        least_misery_rec: list[(int, float)] = []
+        least_misery_rec: list[tuple[int, float]] = []
 
         for movie, predicted_ratings in users_rec.items():
             least_misery_rec.append((movie, min(predicted_ratings)))
