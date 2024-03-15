@@ -41,7 +41,7 @@ class UserRecommendation:
         return numerator / denominator
     
     
-    def prediction_from_neighbors(user: int, movie: int, neighbors: list) -> float:
+    def prediction_from_neighbors(user: int, movie: int, neighbors: list[tuple[int, float]]) -> float:
         numerator = 0
         denominator = 0
 
@@ -56,7 +56,7 @@ class UserRecommendation:
         return UserRecommendation.dataset.get_user_mean_rating(user) + (numerator / denominator)
     
 
-    def top_n_similar_users(user: int, similarity_function = None, n: int = 10) -> list:
+    def top_n_similar_users(user: int, similarity_function = None, n: int = 10) -> list[tuple[int, float]]:
         """
         Finds the top N similar users to a given user based on a similarity function.
 
@@ -72,7 +72,7 @@ class UserRecommendation:
         if similarity_function is None:
             similarity_function = UserRecommendation.sim_pcc
         
-        ls = []
+        ls: list[tuple[int, float]] = []
         
         for other_user in UserRecommendation.dataset.get_users():
             if user == other_user: continue
@@ -85,7 +85,7 @@ class UserRecommendation:
         return ls[:n]
 
 
-    def top_n_recommendations(user: int, n: int = 10, neighbor_size: int = 50):
+    def top_n_recommendations(user: int, n: int = 10, neighbor_size: int = 50) -> list[tuple[int, float]]:
         """
         Generates top N movie recommendations for a given user, excluding movies already rated by the user.
 
@@ -99,7 +99,7 @@ class UserRecommendation:
         unrated_movies = UserRecommendation.dataset.get_movies_unrated_by_user(user)
 
         # Predicted ratings for movies
-        predicted_ratings = []
+        predicted_ratings: list[tuple[int, float]] = []
 
         neighbors = UserRecommendation.top_n_similar_users(user, n=neighbor_size)
 
