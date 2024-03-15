@@ -5,8 +5,9 @@ class UserBasedCollaborativeFiltering:
     def __init__(self):
         self.dataset = dataset.Dataset()
         
+        
 
-    def compute_similarities(self) -> None:
+    def prepare_similarities(self) -> None:
         self.similarities = {}
 
         for user1 in self.dataset.get_users():
