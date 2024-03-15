@@ -5,8 +5,6 @@ class UserBasedCollaborativeFiltering:
     def __init__(self):
         self.dataset = dataset.Dataset()
         
-        
-
     def prepare_similarities(self) -> None:
         self.similarities = {}
 
@@ -95,7 +93,7 @@ class UserBasedCollaborativeFiltering:
         for other_user in self.dataset.get_users():
             if user == other_user: continue
 
-            ls.append((other_user, self.similarities[user][other_user]))
+            ls.append((other_user, similarity_function(user, other_user)))
 
         # Sort the users by similarity in descending order
         ls.sort(key=lambda x: x[1], reverse=True)    
