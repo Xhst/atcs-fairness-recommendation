@@ -100,3 +100,34 @@ class UserBasedCollaborativeFiltering:
         ls.sort(key=lambda x: x[1], reverse=True)    
 
         return ls[:n]
+
+
+    def top_n_recommendations(self, user: int, n: int = 10, neighbor_size: int = 50):
+        """
+        Generates top N movie recommendations for a given user, excluding movies already rated by the user.
+
+        Args:
+            user (int): ID of the user.
+            n (int, optional): Number of recommendations to generate.
+
+        Returns:
+            List: List of tuples containing movie IDs and their predicted ratings.
+        """
+        unrated_movies = self.dataset.get_movies_unrated_by_user(user)
+
+        # Predicted ratings for movies
+        predicted_ratings = []
+
+        neighbors = self.top_n_similar_users(user, n=neighbor_size)
+
+        for movie_id in unrated_movies:
+            # Predict the rating for the movie
+            predicted_rating = self.prediction_from_neighbors(user, movie_id, neighbors)
+            # Store the predicted rating
+            predicted_ratings.append((movie_id, predicted_rating))
+
+        # Predicted ratings in descending order
+        predicted_ratings.sort(key=lambda x: x[1], reverse=True)
+
+        # Return the top N movies along with their predicted ratings
+        return predicted_ratings[:n]
