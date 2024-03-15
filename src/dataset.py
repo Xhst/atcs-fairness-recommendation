@@ -69,41 +69,129 @@ class Dataset:
 
 
     def has_user_rated_movie(self, user_id: int, movie_id: int) -> bool:
+        """
+        Checks if a user has rated a specific movie.
+
+        Args:
+            user_id (int): ID of the user.
+            movie_id (int): ID of the movie.
+
+        Returns:
+            bool: True if the user has rated the movie, False otherwise.
+        """
         return self._user_to_movie_ratings[user_id].get(movie_id) != None
 
 
     def get_user_mean_rating(self, user_id: int) -> float:
+        """
+        Retrieves the mean rating of a user.
+
+        Args:
+            user_id (int): ID of the user.
+
+        Returns:
+            float: Mean rating of the user.
+        """
         return self._user_ratings_mean[user_id]
     
 
     def get_rating(self, user_id: int, movie_id: int) -> float:
+        """
+        Retrieves the rating given by a user for a movie.
+
+        Args:
+            user_id (int): ID of the user.
+            movie_id (int): ID of the movie.
+
+        Returns:
+            float: Rating given by the user for the movie.
+        """
         return self._user_to_movie_ratings[user_id][movie_id]
     
 
     def get_rating_mean_centered(self, user_id: int, movie_id: int) -> float:
+        """
+        Retrieves the mean-centered rating of a user for a movie.
+
+        Args:
+            user_id (int): ID of the user.
+            movie_id (int): ID of the movie.
+
+        Returns:
+            float: Mean-centered rating of the user for the movie.
+        """
         return self.get_rating(user_id, movie_id) - self.get_user_mean_rating(user_id)
     
 
     def get_movies_rated_by_user(self, user_id: int) -> set[int]:
+        """
+        Retrieves the movies rated by a user.
+
+        Args:
+            user_id (int): ID of the user.
+
+        Returns:
+            set: Set of movie IDs rated by the user.
+        """
         return set(self._user_to_movie_ratings[user_id].keys())
     
 
     def get_movies_unrated_by_user(self, user_id: int) -> set[int]:
+        """
+        Retrieves the movies not rated by a user.
+
+        Args:
+            user_id (int): ID of the user.
+
+        Returns:
+            set: Set of movie IDs not rated by the user.
+        """
         # Calculate the difference between all movies and rated movies
         return self.get_movies() - self.get_movies_rated_by_user(user_id)
     
 
     def get_common_movies(self, user1_id: int, user2_id: int) -> set[int]:
+        """
+        Retrieves the movies rated by both users.
+
+        Args:
+            user1_id (int): ID of the first user.
+            user2_id (int): ID of the second user.
+
+        Returns:
+            set: Set of movie IDs rated by both users.
+        """
         return self.get_movies_rated_by_user(user1_id) & self.get_movies_rated_by_user(user2_id)
     
 
     def get_users(self) -> set[int]:
+        """
+        Retrieves the set of user IDs.
+
+        Returns:
+            set: Set of user IDs.
+        """
         return set(self._dataframe['ratings']['userId'])
     
 
     def get_movies(self) -> set[int]:
+        """
+        Retrieves the set of movie IDs.
+
+        Returns:
+            set: Set of movie IDs.
+        """
         return set(self._dataframe['movies']['movieId'])
     
 
     def get_movie_name(self, movie_id: int) -> str:
+        """
+        Retrieves the name of a movie by its ID.
+
+        Args:
+            movie_id (int): ID of the movie.
+
+        Returns:
+            str: Name of the movie.
+        """
         return self.df_grouped_by_movieId.get_group(movie_id).title[0]
