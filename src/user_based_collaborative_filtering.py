@@ -56,3 +56,18 @@ class UserBasedCollaborativeFiltering:
         if denominator == 0: return 0
 
         return numerator / denominator
+    
+    
+    def prediction_from_neighbors(self, user: int, movie: int, neighbors: list) -> float:
+        numerator = 0
+        denominator = 0
+
+        for other_user, similarity in neighbors:
+            if not self.dataset.has_user_rated_movie(other_user, movie): continue
+
+            numerator += similarity * self.dataset.get_rating_mean_centered(other_user, movie)
+            denominator += similarity
+
+        if denominator == 0: return 0
+        
+        return self.dataset.get_user_mean_rating(user) + (numerator / denominator)
