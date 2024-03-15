@@ -1,20 +1,12 @@
 import dataset
-import math
+import math 
 
-class UserBasedCollaborativeFiltering:
-    def __init__(self):
-        self.dataset = dataset.Dataset()
-        
-    def prepare_similarities(self) -> None:
-        self.similarities = {}
-
-        for user1 in self.dataset.get_users():
-            self.similarities[user1] = {}
-            for user2 in self.dataset.get_users():
-                self.similarities[user1][user2] = self.sim_pcc(user1, user2)
+# UserBasedCollaborativeFiltering
+class UBCF:    
     
+    dataset = dataset.Dataset() 
 
-    def sim_pcc(self, user1: int, user2: int) -> float:
+    def sim_pcc(user1: int, user2: int) -> float:
         """
         Computes the Pearson Correlation Coefficient between two users based on their ratings.
 
@@ -26,7 +18,7 @@ class UserBasedCollaborativeFiltering:
             float: Pearson Correlation Coefficient between the two users.
         """
         # Find common movies rated by both users
-        common_movies = self.dataset.get_common_movies(user1, user2)
+        common_movies = UBCF.dataset.get_common_movies(user1, user2)
 
         # Calculate Pearson correlation coefficient
         numerator = 0
@@ -34,8 +26,8 @@ class UserBasedCollaborativeFiltering:
         denominator2 = 0
 
         for movie in common_movies:
-            user1_mean_centered_movie_rating = self.dataset.get_rating_mean_centered(user1, movie)
-            user2_mean_centered_movie_rating = self.dataset.get_rating_mean_centered(user2, movie)
+            user1_mean_centered_movie_rating = UBCF.dataset.get_rating_mean_centered(user1, movie)
+            user2_mean_centered_movie_rating = UBCF.dataset.get_rating_mean_centered(user2, movie)
 
             numerator += user1_mean_centered_movie_rating * user2_mean_centered_movie_rating
             
@@ -49,22 +41,22 @@ class UserBasedCollaborativeFiltering:
         return numerator / denominator
     
     
-    def prediction_from_neighbors(self, user: int, movie: int, neighbors: list) -> float:
+    def prediction_from_neighbors(user: int, movie: int, neighbors: list) -> float:
         numerator = 0
         denominator = 0
 
         for other_user, similarity in neighbors:
-            if not self.dataset.has_user_rated_movie(other_user, movie): continue
+            if not UBCF.dataset.has_user_rated_movie(other_user, movie): continue
 
-            numerator += similarity * self.dataset.get_rating_mean_centered(other_user, movie)
+            numerator += similarity * UBCF.dataset.get_rating_mean_centered(other_user, movie)
             denominator += similarity
 
         if denominator == 0: return 0
         
-        return self.dataset.get_user_mean_rating(user) + (numerator / denominator)
+        return UBCF.dataset.get_user_mean_rating(user) + (numerator / denominator)
     
 
-    def top_n_similar_users(self, user: int, similarity_function = None, n: int = 10) -> list:
+    def top_n_similar_users(user: int, similarity_function = None, n: int = 10) -> list:
         """
         Finds the top N similar users to a given user based on a similarity function.
 
@@ -78,11 +70,11 @@ class UserBasedCollaborativeFiltering:
             List: List of tuples containing similar user IDs and their corresponding similarity scores.
         """
         if similarity_function is None:
-            similarity_function = self.sim_pcc
+            similarity_function = UBCF.sim_pcc
         
         ls = []
         
-        for other_user in self.dataset.get_users():
+        for other_user in UBCF.dataset.get_users():
             if user == other_user: continue
 
             ls.append((other_user, similarity_function(user, other_user)))
@@ -93,7 +85,7 @@ class UserBasedCollaborativeFiltering:
         return ls[:n]
 
 
-    def top_n_recommendations(self, user: int, n: int = 10, neighbor_size: int = 50):
+    def top_n_recommendations(user: int, n: int = 10, neighbor_size: int = 50):
         """
         Generates top N movie recommendations for a given user, excluding movies already rated by the user.
 
@@ -104,16 +96,16 @@ class UserBasedCollaborativeFiltering:
         Returns:
             List: List of tuples containing movie IDs and their predicted ratings.
         """
-        unrated_movies = self.dataset.get_movies_unrated_by_user(user)
+        unrated_movies = UBCF.dataset.get_movies_unrated_by_user(user)
 
         # Predicted ratings for movies
         predicted_ratings = []
 
-        neighbors = self.top_n_similar_users(user, n=neighbor_size)
+        neighbors = UBCF.top_n_similar_users(user, n=neighbor_size)
 
         for movie_id in unrated_movies:
             # Predict the rating for the movie
-            predicted_rating = self.prediction_from_neighbors(user, movie_id, neighbors)
+            predicted_rating = UBCF.prediction_from_neighbors(user, movie_id, neighbors)
             # Store the predicted rating
             predicted_ratings.append((movie_id, predicted_rating))
 
