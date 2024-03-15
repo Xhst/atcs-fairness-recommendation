@@ -3,6 +3,13 @@ import os
 
 class Dataset:
 
+    _instance = None
+
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
     def __init__(self):
         # List of CSV files to load as dataframes
         self._dataframe_names = ['movies', 'ratings']
@@ -36,7 +43,7 @@ class Dataset:
         # Dictionary to store user ratings
         self._user_to_movie_ratings: dict[int, dict[int, float]] = {}
 
-         # Group ratings dataframe by user
+        # Group ratings dataframe by user
         df_grouped_by_user = self._dataframe['ratings'].groupby('userId')
 
         # Calculate mean rating for each user
