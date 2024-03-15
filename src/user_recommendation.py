@@ -2,7 +2,7 @@ import dataset
 import math 
 
 # UserBasedCollaborativeFiltering
-class UBCF:    
+class UserRecommendation:    
     
     dataset = dataset.Dataset() 
 
@@ -18,7 +18,7 @@ class UBCF:
             float: Pearson Correlation Coefficient between the two users.
         """
         # Find common movies rated by both users
-        common_movies = UBCF.dataset.get_common_movies(user1, user2)
+        common_movies = UserRecommendation.dataset.get_common_movies(user1, user2)
 
         # Calculate Pearson correlation coefficient
         numerator = 0
@@ -26,8 +26,8 @@ class UBCF:
         denominator2 = 0
 
         for movie in common_movies:
-            user1_mean_centered_movie_rating = UBCF.dataset.get_rating_mean_centered(user1, movie)
-            user2_mean_centered_movie_rating = UBCF.dataset.get_rating_mean_centered(user2, movie)
+            user1_mean_centered_movie_rating = UserRecommendation.dataset.get_rating_mean_centered(user1, movie)
+            user2_mean_centered_movie_rating = UserRecommendation.dataset.get_rating_mean_centered(user2, movie)
 
             numerator += user1_mean_centered_movie_rating * user2_mean_centered_movie_rating
             
@@ -46,14 +46,14 @@ class UBCF:
         denominator = 0
 
         for other_user, similarity in neighbors:
-            if not UBCF.dataset.has_user_rated_movie(other_user, movie): continue
+            if not UserRecommendation.dataset.has_user_rated_movie(other_user, movie): continue
 
-            numerator += similarity * UBCF.dataset.get_rating_mean_centered(other_user, movie)
+            numerator += similarity * UserRecommendation.dataset.get_rating_mean_centered(other_user, movie)
             denominator += similarity
 
         if denominator == 0: return 0
         
-        return UBCF.dataset.get_user_mean_rating(user) + (numerator / denominator)
+        return UserRecommendation.dataset.get_user_mean_rating(user) + (numerator / denominator)
     
 
     def top_n_similar_users(user: int, similarity_function = None, n: int = 10) -> list:
@@ -70,11 +70,11 @@ class UBCF:
             List: List of tuples containing similar user IDs and their corresponding similarity scores.
         """
         if similarity_function is None:
-            similarity_function = UBCF.sim_pcc
+            similarity_function = UserRecommendation.sim_pcc
         
         ls = []
         
-        for other_user in UBCF.dataset.get_users():
+        for other_user in UserRecommendation.dataset.get_users():
             if user == other_user: continue
 
             ls.append((other_user, similarity_function(user, other_user)))
@@ -96,16 +96,16 @@ class UBCF:
         Returns:
             List: List of tuples containing movie IDs and their predicted ratings.
         """
-        unrated_movies = UBCF.dataset.get_movies_unrated_by_user(user)
+        unrated_movies = UserRecommendation.dataset.get_movies_unrated_by_user(user)
 
         # Predicted ratings for movies
         predicted_ratings = []
 
-        neighbors = UBCF.top_n_similar_users(user, n=neighbor_size)
+        neighbors = UserRecommendation.top_n_similar_users(user, n=neighbor_size)
 
         for movie_id in unrated_movies:
             # Predict the rating for the movie
-            predicted_rating = UBCF.prediction_from_neighbors(user, movie_id, neighbors)
+            predicted_rating = UserRecommendation.prediction_from_neighbors(user, movie_id, neighbors)
             # Store the predicted rating
             predicted_ratings.append((movie_id, predicted_rating))
 
