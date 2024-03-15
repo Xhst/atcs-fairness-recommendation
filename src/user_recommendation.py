@@ -6,6 +6,7 @@ class UserRecommendation:
     
     dataset = dataset.Dataset() 
 
+    @staticmethod
     def sim_pcc(user1: int, user2: int) -> float:
         """
         Computes the Pearson Correlation Coefficient between two users based on their ratings.
@@ -41,6 +42,7 @@ class UserRecommendation:
         return numerator / denominator
     
     
+    @staticmethod
     def prediction_from_neighbors(user: int, movie: int, neighbors: list[tuple[int, float]]) -> float:
         numerator = 0
         denominator = 0
@@ -56,6 +58,7 @@ class UserRecommendation:
         return UserRecommendation.dataset.get_user_mean_rating(user) + (numerator / denominator)
     
 
+    @staticmethod
     def top_n_similar_users(user: int, similarity_function = None, n: int = 10) -> list[tuple[int, float]]:
         """
         Finds the top N similar users to a given user based on a similarity function.
@@ -85,6 +88,7 @@ class UserRecommendation:
         return ls[:n]
 
 
+    @staticmethod
     def top_n_recommendations(user: int, n: int = 10, neighbor_size: int = 50) -> list[tuple[int, float]]:
         """
         Generates top N movie recommendations for a given user, excluding movies already rated by the user.
