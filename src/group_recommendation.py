@@ -18,7 +18,7 @@ class GroupRecommendation:
         aggregate_recommendations: dict[int, list[float]] = {}
 
         for user in users:
-            user_recommendations = UserRecommendation.top_n_recommendations(user, n, neighbor_size)
+            user_recommendations = UserRecommendation.top_n_recommendations(user, n=n, neighbor_size=neighbor_size)
 
             for (movie, predicted_rating) in user_recommendations:
                 if aggregate_recommendations.get(movie) == None:
