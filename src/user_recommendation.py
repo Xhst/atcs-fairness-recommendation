@@ -126,23 +126,25 @@ class UserRecommendation:
 
 
     @staticmethod
-    def top_n_recommendations(user: int, n: int = 10, neighbor_size: int = 50) -> list[tuple[int, float]]:
+    def top_n_recommendations(user: int, similarity_function = None, n: int = 10, neighbor_size: int = 50) -> list[tuple[int, float]]:
         """
         Generates top N movie recommendations for a given user, excluding movies already rated by the user.
 
         Args:
             user (int): ID of the user.
-            n (int, optional): Number of recommendations to generate.
+            similarity_function (function, optional): A function to compute similarity between users. If None, defaults to Pearson correlation.
+            n (int, optional): Number of recommendations to generate. Defaults to 10.
+            neighbor_size (int, optional): Number of neighbors to consider for recommendation. Defaults to 50.
 
         Returns:
-            List: List of tuples containing movie IDs and their predicted ratings.
+            List[tuple[int, float]]: List of tuples containing movie IDs and their predicted ratings.
         """
         unrated_movies = UserRecommendation.dataset.get_movies_unrated_by_user(user)
 
         # Predicted ratings for movies
         predicted_ratings: list[tuple[int, float]] = []
 
-        neighbors = UserRecommendation.top_n_similar_users(user, n=neighbor_size)
+        neighbors = UserRecommendation.top_n_similar_users(user, similarity_function=similarity_function, n=neighbor_size)
 
         for movie_id in unrated_movies:
             # Predict the rating for the movie
