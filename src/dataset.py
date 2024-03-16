@@ -40,13 +40,15 @@ class Dataset:
     def _init_movies(self):
         unique_genre = self.movies_df['genres'].explode().unique()
 
-        # Get the count of each genre
-        self.genre_distribution = self.movies_df['genres'].explode().value_counts()
-
         # Make a dict assigning an index to a genre
         self.genres = list(unique_genre)
 
         self.df_grouped_by_movieId = self.movies_df.groupby('movieId')
+
+        ratings_grouped_by_movie_df = self.ratings_df.groupby('movieId')
+
+        self.movies_df['avg_rating'] =  ratings_grouped_by_movie_df.rating.mean(numeric_only=True)
+
 
     
     def _init_ratings(self):
@@ -56,13 +58,13 @@ class Dataset:
         self._user_to_movie_ratings: dict[int, dict[int, float]] = {}
 
         # Group ratings dataframe by user
-        df_grouped_by_user = self.ratings_df.groupby('userId')
+        ratings_grouped_by_user_df = self.ratings_df.groupby('userId')
 
         # Calculate mean rating for each user
-        self._user_ratings_mean = df_grouped_by_user.rating.mean()
+        self._user_ratings_mean = ratings_grouped_by_user_df.rating.mean()
 
         # Initialize user ratings dictionary
-        for user_id, rating_df in df_grouped_by_user:
+        for user_id, rating_df in ratings_grouped_by_user_df:
             self._user_to_movie_ratings[user_id] = dict(zip(rating_df['movieId'], rating_df['rating']))
 
         self.rating_count_df = pd.DataFrame(self.ratings_df.groupby(['rating']).size(), columns=['count'])
