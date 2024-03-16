@@ -69,6 +69,25 @@ class UserRecommendation:
     
     
     @staticmethod
+    def sim_jaccard(user1: int, user2: int):
+        """
+        Computes the Jaccard similarity coefficient between two users based on the movies they have rated.
+
+        Args:
+            user1 (int): ID of the first user.
+            user2 (int): ID of the second user.
+
+        Returns:
+            float: Jaccard similarity coefficient between the two users.
+        """
+        number_of_common_movies = len(UserRecommendation.dataset.get_common_movies(user1, user2))
+        number_of_movies_rated_by_user1 = len(UserRecommendation.dataset.get_movies_rated_by_user(user2))
+        number_of_movies_rated_by_user2 = len(UserRecommendation.dataset.get_movies_rated_by_user(user2))
+        
+        return number_of_common_movies / (number_of_movies_rated_by_user1 | number_of_movies_rated_by_user2)
+
+    
+    @staticmethod
     def prediction_from_neighbors(user: int, movie: int, neighbors: list[tuple[int, float]]) -> float:
         """
         Predicts the rating for a movie by a user based on the ratings of similar users.
