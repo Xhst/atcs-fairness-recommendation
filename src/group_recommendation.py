@@ -48,6 +48,8 @@ class GroupRecommendation:
         for movie, predicted_ratings in users_rec.items():
             average = sum(predicted_ratings) / len(predicted_ratings)
             avg_rec.append((movie, average))
+        
+        avg_rec.sort(key=lambda x: x[1], reverse=True)
 
         return avg_rec[:n]
 
@@ -70,6 +72,8 @@ class GroupRecommendation:
 
         for movie, predicted_ratings in users_rec.items():
             least_misery_rec.append((movie, min(predicted_ratings)))
+
+        least_misery_rec.sort(key=lambda x: x[1], reverse=True)
 
         return least_misery_rec[:n]
 
