@@ -90,7 +90,7 @@ class UserRecommendation:
     @staticmethod
     def sim_wpcc_jaccard(user1: int, user2: int):
         """
-        Computes the weighted product of Pearson correlation coefficient (PCC) and Jaccard similarity coefficient between two users.
+        Computes Pearson correlation coefficient (PCC) weighted with the Jaccard similarity coefficient between two users.
 
         Args:
             user1 (int): ID of the first user.
