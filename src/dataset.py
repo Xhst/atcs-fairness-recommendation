@@ -21,8 +21,8 @@ class Dataset:
         self._dataframe: dict[int, pd.DataFrame] = {}
 
         self._load_dataframes()
-        self._init_ratings()
         self._init_movies()
+        self._init_ratings()
     
 
     def _load_dataframes(self) -> None:
@@ -33,18 +33,30 @@ class Dataset:
         project_folder = os.path.dirname(__file__) + '/../'
         dataset_path = os.path.join(project_folder, 'dataset', 'movielens-edu')
 
-        # Load CSV files into pandas dataframes
-        for name in self._dataframe_names:
-            path = os.path.join(dataset_path, name + '.csv')
-            self._dataframe[name] = pd.read_csv(path)
+        self.movies_df = pd.read_csv(dataset_path + "/movies.csv", converters={"genres": lambda x: x.strip("[]").replace("'","").split("|")})
+        self.ratings_df = pd.read_csv(dataset_path + "/ratings.csv")
+
+
+    def _init_movies(self):
+        unique_genre = self.movies_df['genres'].explode().unique()
+
+        # Get the count of each genre
+        self.genre_distribution = self.movies_df['genres'].explode().value_counts()
+
+        # Make a dict assigning an index to a genre
+        self.genres = list(unique_genre)
+
+        self.df_grouped_by_movieId = self.movies_df.groupby('movieId')
 
     
     def _init_ratings(self):
+        self.ratings_df['datetime'] = pd.to_datetime(self.ratings_df['timestamp'], unit='s').dt.strftime('%d-%m-%Y')
+
         # Dictionary to store user ratings
         self._user_to_movie_ratings: dict[int, dict[int, float]] = {}
 
         # Group ratings dataframe by user
-        df_grouped_by_user = self._dataframe['ratings'].groupby('userId')
+        df_grouped_by_user = self.ratings_df.groupby('userId')
 
         # Calculate mean rating for each user
         self._user_ratings_mean = df_grouped_by_user.rating.mean()
@@ -53,26 +65,7 @@ class Dataset:
         for user_id, rating_df in df_grouped_by_user:
             self._user_to_movie_ratings[user_id] = dict(zip(rating_df['movieId'], rating_df['rating']))
 
-
-    def _init_movies(self):
-        self.df_grouped_by_movieId = self._dataframe['movies'].groupby('movieId')
-    
-
-    def print_dataset_first_rows(self, nrows: int = 5) -> None:
-        """
-        Prints the first few rows of each dataframe in the dataset.
-
-        Args:
-            nrows (int, optional): Number of rows to display. Defaults to 5.
-        """
-        # Display the first few rows of each dataframe in the dataset
-        print('Max '+ str(nrows) +' csv rows displayed per file.\n')
-
-        for name in self._dataframe_names:
-            print('Display '+ name +'.csv')
-            print('Number of elements: ', len(self._dataframe[name]))
-            print('First elements: ', self._dataframe[name].head(nrows))
-            print('\n')
+        self.rating_count_df = pd.DataFrame(self.ratings_df.groupby(['rating']).size(), columns=['count'])
 
 
     def has_user_rated_movie(self, user_id: int, movie_id: int) -> bool:
@@ -178,7 +171,7 @@ class Dataset:
         Returns:
             set: Set of user IDs.
         """
-        return set(self._dataframe['ratings']['userId'])
+        return set(self.ratings_df['userId'])
     
 
     def get_movies(self) -> set[int]:
@@ -188,7 +181,7 @@ class Dataset:
         Returns:
             set: Set of movie IDs.
         """
-        return set(self._dataframe['movies']['movieId'])
+        return set(self.movies_df['movieId'])
     
 
     def get_movie_name(self, movie_id: int) -> str:
@@ -202,3 +195,7 @@ class Dataset:
             str: Name of the movie.
         """
         return self.df_grouped_by_movieId.get_group(movie_id).title[0]
+    
+
+    def get_movie_genres(self, movie_id: int):
+        return self.df_grouped_by_movieId.get_group(movie_id).genres.values[0]
