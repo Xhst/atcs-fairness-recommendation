@@ -62,7 +62,7 @@ class UserRecommendation:
             if not UserRecommendation.dataset.has_user_rated_movie(other_user, movie): continue
 
             numerator += similarity * UserRecommendation.dataset.get_rating_mean_centered(other_user, movie)
-            denominator += similarity
+            denominator += abs(similarity)
 
         if denominator == 0: return 0
         
