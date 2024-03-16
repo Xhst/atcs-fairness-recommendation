@@ -43,6 +43,32 @@ class UserRecommendation:
     
     
     @staticmethod
+    def sim_wpcc_common_movies(user1: int, user2: int):
+        """
+        Computes the Pearson Correlation Coefficient between two users based on their ratings,
+        using the number of common movies divided by the total number of movies rated by the second user as a weight.
+        
+        This helps because penalizes the similarity score when the two users have very few rated movies in common.
+        Furthermore, it helps to avoid the problem of having a similarity score of 1 when the two users have only one movie in common.
+        Additionally, it penalizes the similarity score when the second user has rated a very large number of movies compared to
+        the movies rated in common with the first user.
+        
+        Args:
+            user1 (int): ID of the first user.
+            user2 (int): ID of the second user.
+            
+        Returns:
+            float: Pearson Correlation Coefficient between the two users, multiplied by the weight.
+        """
+        number_of_common_movies = len(UserRecommendation.dataset.get_common_movies(user1, user2))
+        number_of_movies_rated_by_user2 = len(UserRecommendation.dataset.get_movies_rated_by_user(user2))
+        
+        weight = number_of_common_movies / number_of_movies_rated_by_user2
+        
+        return UserRecommendation.sim_pcc(user1, user2) * weight
+    
+    
+    @staticmethod
     def prediction_from_neighbors(user: int, movie: int, neighbors: list[tuple[int, float]]) -> float:
         """
         Predicts the rating for a movie by a user based on the ratings of similar users.
