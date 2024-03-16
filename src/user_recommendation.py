@@ -86,7 +86,22 @@ class UserRecommendation:
         
         return number_of_common_movies / (number_of_movies_rated_by_user1 | number_of_movies_rated_by_user2)
 
+
+    @staticmethod
+    def sim_wpcc_jaccard(user1: int, user2: int):
+        """
+        Computes the weighted product of Pearson correlation coefficient (PCC) and Jaccard similarity coefficient between two users.
+
+        Args:
+            user1 (int): ID of the first user.
+            user2 (int): ID of the second user.
+
+        Returns:
+            float: Weighted product of PCC and Jaccard similarity between the two users.
+        """
+        return UserRecommendation.sim_pcc(user1, user2) * UserRecommendation.sim_jaccard(user1, user2)
     
+
     @staticmethod
     def prediction_from_neighbors(user: int, movie: int, neighbors: list[tuple[int, float]]) -> float:
         """
