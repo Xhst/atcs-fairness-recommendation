@@ -81,7 +81,7 @@ class UserRecommendation:
             float: Jaccard similarity coefficient between the two users.
         """
         number_of_common_movies = len(UserRecommendation.dataset.get_common_movies(user1, user2))
-        number_of_movies_rated_by_user1 = len(UserRecommendation.dataset.get_movies_rated_by_user(user2))
+        number_of_movies_rated_by_user1 = len(UserRecommendation.dataset.get_movies_rated_by_user(user1))
         number_of_movies_rated_by_user2 = len(UserRecommendation.dataset.get_movies_rated_by_user(user2))
         
         return number_of_common_movies / (number_of_movies_rated_by_user1 | number_of_movies_rated_by_user2)
