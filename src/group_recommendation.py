@@ -31,9 +31,11 @@ class GroupRecommendation:
         for user in users:
             neighbors = UserRecommendation.top_n_similar_users(user, n=neighbor_size)
             for movie in movies:
+                # Take the rating from the user if the user has rated the movie
                 if movie in UserRecommendation.dataset.get_movies_rated_by_user(user):
                     aggregate_recommendations[movie].append(UserRecommendation.dataset.get_rating(user, movie))
                     continue
+                # Otherwise, predict the rating
                 aggregate_recommendations[movie].append(UserRecommendation.prediction_from_neighbors(user, movie, neighbors))
 
         return aggregate_recommendations
