@@ -63,7 +63,7 @@ class UserRecommendation:
         number_of_common_movies = len(UserRecommendation.dataset.get_common_movies(user1, user2))
         number_of_movies_rated_by_user2 = len(UserRecommendation.dataset.get_movies_rated_by_user(user2))
         
-        weight = number_of_common_movies / number_of_movies_rated_by_user2
+        weight = number_of_common_movies / number_of_movies_rated_by_user2 if number_of_movies_rated_by_user2 != 0 else 0
         
         return UserRecommendation.sim_pcc(user1, user2) * weight
     

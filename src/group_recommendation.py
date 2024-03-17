@@ -1,3 +1,5 @@
+import math
+import numpy as np
 from user_recommendation import UserRecommendation
 from collections import defaultdict 
 
@@ -44,7 +46,8 @@ class GroupRecommendation:
     @staticmethod
     def average_aggregation(users: set[int], n: int = 10) -> list[tuple[int, float]]:
         """
-        Aggregate recommendations by averaging predicted ratings.
+        Rank recommendations by averaging predicted ratings.
+        It produces better overall satisfacrion than the least misery aggregation.
 
         Args:
             users (set[int]): Set of user IDs.
@@ -69,7 +72,8 @@ class GroupRecommendation:
     @staticmethod
     def least_misery_aggregation(users: set[int], n: int = 10) -> list[tuple[int, float]]:
         """
-        Aggregate recommendations by selecting the minimum predicted rating.
+        Rank recommendations by selecting the minimum predicted rating.
+        In theory, less disagreement among users than the average aggregation.
 
         Args:
             users (set[int]): Set of user IDs.
@@ -88,4 +92,38 @@ class GroupRecommendation:
         least_misery_rec.sort(key=lambda x: x[1], reverse=True)
 
         return least_misery_rec[:n]
+    
+    
+    @staticmethod
+    def weighted_average_aggregation(users: set[int], n: int = 10) -> list[tuple[int, float]]:
+        """
+        Rank recommendations by weighted average of predicted ratings.
+        It is a compromise between average and least misery aggregations.
+        We take into account the disagreement among users. We calculate the disagreement weight
+        as 1 over the standard deviation of the predicted ratings.
+
+        Args:
+            users (set[int]): Set of user IDs.
+            n (int): Number of recommendations to return. Defaults to 10.
+
+        Returns:
+            list[tuple[int, float]]: List of tuples containing movie ID and weighted average predicted rating.
+        """
+        users_rec = GroupRecommendation.aggregate_users_recommendations(users)
+
+        w_avg_rec: list[tuple[int, float]] = []
+
+        for movie, predicted_ratings in users_rec.items():
+            std_dev_ratings = np.std(predicted_ratings)
+            # We calculate the disagreement weight as 1 over the standard deviation of the predicted ratings
+            # We add a small value to avoid division by zero
+            disagreement_weight = 1 / (std_dev_ratings + 0.0001)
+            
+            average = sum(predicted_ratings) / len(predicted_ratings)
+            w_average = average * disagreement_weight
+            w_avg_rec.append((movie, w_average))
+        
+        w_avg_rec.sort(key=lambda x: x[1], reverse=True)
+        
+        return w_avg_rec[:n]
 
