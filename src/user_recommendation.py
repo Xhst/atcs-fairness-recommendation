@@ -124,7 +124,7 @@ class UserRecommendation:
             numerator += similarity * UserRecommendation.dataset.get_rating_mean_centered(other_user, movie)
             denominator += abs(similarity)
 
-        if denominator == 0: return 0
+        if denominator == 0: return UserRecommendation.dataset.get_user_mean_rating(user)
         
         return UserRecommendation.dataset.get_user_mean_rating(user) + (numerator / denominator)
     

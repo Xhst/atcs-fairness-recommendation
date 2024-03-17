@@ -1,4 +1,5 @@
 from user_recommendation import UserRecommendation
+from collections import defaultdict 
 
 class GroupRecommendation:
 
@@ -24,7 +25,37 @@ class GroupRecommendation:
                 if aggregate_recommendations.get(movie) == None:
                     aggregate_recommendations[movie] = [predicted_rating]
                 else:
-                    aggregate_recommendations.get(movie).append(predicted_rating)
+                    aggregate_recommendations[movie].append(predicted_rating)
+
+        return aggregate_recommendations
+    
+
+    @staticmethod
+    def aggregate_users_recommendations_with_all_predictions(users: set[int], n: int = 10, neighbor_size: int = 50) -> dict[int, list[float]]:
+        """
+        Aggregate recommendations from a set of users.
+
+        Args:
+            users (set[int]): Set of user IDs.
+            n (int): Number of recommendations per user. Defaults to 10.
+            neighbor_size (int): Size of the neighborhood for recommendation. Defaults to 50.
+
+        Returns:
+            dict[int, list[float]]: Dictionary where keys are movie IDs and values are lists of predicted ratings.
+        """
+        movies: set[int] = set()
+        aggregate_recommendations: dict[int, list[float]] = defaultdict(list[float])
+
+        for user in users:
+            user_recommendations = UserRecommendation.top_n_recommendations(user, n=n, neighbor_size=neighbor_size)
+
+            for (movie, _) in user_recommendations:
+                movies.add(movie)
+
+        for user in users:
+            neighbors = UserRecommendation.top_n_similar_users(user, n=neighbor_size)
+            for movie in movies:
+                aggregate_recommendations[movie].append(UserRecommendation.prediction_from_neighbors(user, movie, neighbors))
 
         return aggregate_recommendations
 
@@ -41,7 +72,7 @@ class GroupRecommendation:
         Returns:
             list[tuple[int, float]]: List of tuples containing movie ID and average predicted rating.
         """
-        users_rec = GroupRecommendation.aggregate_users_recommendations(users)
+        users_rec = GroupRecommendation.aggregate_users_recommendations_with_all_predictions(users)
 
         avg_rec: list[tuple[int, float]] = []
 
@@ -66,7 +97,7 @@ class GroupRecommendation:
         Returns:
             list[tuple[int, float]]: List of tuples containing movie ID and minimum predicted rating.
         """
-        users_rec = GroupRecommendation.aggregate_users_recommendations(users)
+        users_rec = GroupRecommendation.aggregate_users_recommendations_with_all_predictions(users)
 
         least_misery_rec: list[tuple[int, float]] = []
 
