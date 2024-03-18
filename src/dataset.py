@@ -14,6 +14,7 @@ class Dataset:
         self._init_movies()
         self._init_ratings()
 
+
     @staticmethod
     def get_dataset_path():
         # Define project and dataset paths
@@ -66,6 +67,9 @@ class Dataset:
             bool: True if the user has rated the movie, False otherwise.
         """
         return self._user_to_movie_ratings[user_id].get(movie_id) != None
+    
+    def has_user(self, user_id: int) -> bool:
+        return self._user_to_movie_ratings.get(user_id) != None
 
 
     def get_user_mean_rating(self, user_id: int) -> float:
