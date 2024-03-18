@@ -1,13 +1,15 @@
 import dataset
 import math 
+from typing import Callable
 
 # UserBasedCollaborativeFiltering
 class UserRecommendation:    
     
-    dataset = dataset.Dataset() 
+    def __init__(self, dataset: dataset.Dataset) -> None:
+        self.dataset = dataset
 
-    @staticmethod
-    def sim_pcc(user1: int, user2: int) -> float:
+
+    def sim_pcc(self, user1: int, user2: int) -> float:
         """
         Computes the Pearson Correlation Coefficient between two users based on their ratings.
 
@@ -19,7 +21,7 @@ class UserRecommendation:
             float: Pearson Correlation Coefficient between the two users.
         """
         # Find common movies rated by both users
-        common_movies = UserRecommendation.dataset.get_common_movies(user1, user2)
+        common_movies = self.dataset.get_common_movies(user1, user2)
 
         # Calculate Pearson correlation coefficient
         numerator = 0
@@ -27,8 +29,8 @@ class UserRecommendation:
         denominator2 = 0
 
         for movie in common_movies:
-            user1_mean_centered_movie_rating = UserRecommendation.dataset.get_rating_mean_centered(user1, movie)
-            user2_mean_centered_movie_rating = UserRecommendation.dataset.get_rating_mean_centered(user2, movie)
+            user1_mean_centered_movie_rating = self.dataset.get_rating_mean_centered(user1, movie)
+            user2_mean_centered_movie_rating = self.dataset.get_rating_mean_centered(user2, movie)
 
             numerator += user1_mean_centered_movie_rating * user2_mean_centered_movie_rating
             
@@ -42,34 +44,18 @@ class UserRecommendation:
         return numerator / denominator
     
     
-    @staticmethod
-    def sim_wpcc_common_movies(user1: int, user2: int):
-        """
-        Computes the Pearson Correlation Coefficient between two users based on their ratings,
-        using the number of common movies divided by the total number of movies rated by the second user as a weight.
-        
-        This helps because penalizes the similarity score when the two users have very few rated movies in common.
-        Furthermore, it helps to avoid the problem of having a similarity score of 1 when the two users have only one movie in common.
-        Additionally, it penalizes the similarity score when the second user has rated a very large number of movies compared to
-        the movies rated in common with the first user.
-        
-        Args:
-            user1 (int): ID of the first user.
-            user2 (int): ID of the second user.
-            
-        Returns:
-            float: Pearson Correlation Coefficient between the two users, multiplied by the weight.
-        """
-        number_of_common_movies = len(UserRecommendation.dataset.get_common_movies(user1, user2))
-        number_of_movies_rated_by_user2 = len(UserRecommendation.dataset.get_movies_rated_by_user(user2))
+    
+    def sim_wpcc(self, user1: int, user2: int, weight: Callable[[int, int], float]) -> float:
+        number_of_common_movies = len(self.dataset.get_common_movies(user1, user2))
+        number_of_movies_rated_by_user2 = len(self.dataset.get_movies_rated_by_user(user2))
         
         weight = number_of_common_movies / number_of_movies_rated_by_user2 if number_of_movies_rated_by_user2 != 0 else 0
         
-        return UserRecommendation.sim_pcc(user1, user2) * weight
+        return self.sim_pcc(user1, user2) * weight
     
     
-    @staticmethod
-    def sim_jaccard(user1: int, user2: int):
+    
+    def sim_jaccard(self, user1: int, user2: int):
         """
         Computes the Jaccard similarity coefficient between two users based on the movies they have rated.
 
@@ -80,15 +66,15 @@ class UserRecommendation:
         Returns:
             float: Jaccard similarity coefficient between the two users.
         """
-        number_of_common_movies = len(UserRecommendation.dataset.get_common_movies(user1, user2))
-        number_of_movies_rated_by_user1 = len(UserRecommendation.dataset.get_movies_rated_by_user(user1))
-        number_of_movies_rated_by_user2 = len(UserRecommendation.dataset.get_movies_rated_by_user(user2))
+        common_movies = self.dataset.get_common_movies(user1, user2)
+        movies_rated_by_user1 = self.dataset.get_movies_rated_by_user(user1)
+        movies_rated_by_user2 = self.dataset.get_movies_rated_by_user(user2)
         
-        return number_of_common_movies / (number_of_movies_rated_by_user1 | number_of_movies_rated_by_user2)
+        return len(common_movies) / len(movies_rated_by_user1 | movies_rated_by_user2)
 
 
-    @staticmethod
-    def sim_wpcc_jaccard(user1: int, user2: int):
+    
+    def sim_wpcc_jaccard(self, user1: int, user2: int):
         """
         Computes Pearson correlation coefficient (PCC) weighted with the Jaccard similarity coefficient between two users.
 
@@ -99,11 +85,11 @@ class UserRecommendation:
         Returns:
             float: Weighted product of PCC and Jaccard similarity between the two users.
         """
-        return UserRecommendation.sim_pcc(user1, user2) * UserRecommendation.sim_jaccard(user1, user2)
+        return self.sim_pcc(user1, user2) * self.sim_jaccard(user1, user2)
     
 
-    @staticmethod
-    def prediction_from_neighbors(user: int, movie: int, neighbors: list[tuple[int, float]]) -> float:
+    
+    def prediction_from_neighbors(self, user: int, movie: int, neighbors: list[tuple[int, float]]) -> float:
         """
         Predicts the rating for a movie by a user based on the ratings of similar users.
 
@@ -119,18 +105,18 @@ class UserRecommendation:
         denominator = 0
 
         for other_user, similarity in neighbors:
-            if not UserRecommendation.dataset.has_user_rated_movie(other_user, movie): continue
+            if not self.dataset.has_user_rated_movie(other_user, movie): continue
 
-            numerator += similarity * UserRecommendation.dataset.get_rating_mean_centered(other_user, movie)
+            numerator += similarity * self.dataset.get_rating_mean_centered(other_user, movie)
             denominator += abs(similarity)
 
-        if denominator == 0: return UserRecommendation.dataset.get_user_mean_rating(user)
+        if denominator == 0: return self.dataset.get_user_mean_rating(user)
         
-        return UserRecommendation.dataset.get_user_mean_rating(user) + (numerator / denominator)
+        return self.dataset.get_user_mean_rating(user) + (numerator / denominator)
     
 
-    @staticmethod
-    def get_all_similar_users_to_user(user: int, similarity_function = None, n: int = 10) -> list[tuple[int, float]]:
+    
+    def similarity_for_all_users(self, user: int, similarity_function: Callable = None) -> list[tuple[int, float]]:
         """
         Finds the top N similar users to a given user based on a similarity function.
 
@@ -144,11 +130,11 @@ class UserRecommendation:
             List: List of tuples containing similar user IDs and their corresponding similarity scores.
         """
         if similarity_function is None:
-            similarity_function = UserRecommendation.sim_pcc
+            similarity_function = self.sim_pcc
         
         ls: list[tuple[int, float]] = []
         
-        for other_user in UserRecommendation.dataset.get_users():
+        for other_user in self.dataset.get_users():
             if user == other_user: continue
 
             ls.append((other_user, similarity_function(user, other_user)))
@@ -159,8 +145,8 @@ class UserRecommendation:
         return ls
     
     
-    @staticmethod
-    def top_n_similar_users(user: int, similarity_function = None, n: int = 10) -> list[tuple[int, float]]:
+    
+    def top_n_similar_users(self, user: int, similarity_function = None, n: int = 10) -> list[tuple[int, float]]:
         """
         Finds the top N similar users to a given user based on the Pearson correlation coefficient.
 
@@ -170,12 +156,12 @@ class UserRecommendation:
         Returns:
             List: List of tuples containing similar user IDs and their corresponding similarity scores.
         """
-        all_similar_users = UserRecommendation.get_all_similar_users_to_user(user, similarity_function, n)
+        all_similar_users = self.similarity_for_all_users(user, similarity_function)
         return all_similar_users[:n]
     
     
-    @staticmethod
-    def get_all_recommendations_for_user(user: int, similarity_function = None, neighbor_size: int = 50) -> list[tuple[int, float]]:
+    
+    def get_all_recommendations_for_user(self, user: int, similarity_function = None, neighbor_size: int = 50) -> list[tuple[int, float]]:
         """
         Get all movie recommendations for a user.
 
@@ -187,16 +173,16 @@ class UserRecommendation:
         Returns:
             List[tuple[int, float]]: List of tuples containing movie IDs and their predicted ratings.
         """
-        unrated_movies = UserRecommendation.dataset.get_movies_unrated_by_user(user)
+        unrated_movies = self.dataset.get_movies_unrated_by_user(user)
 
         # Predicted ratings for movies
         predicted_ratings: list[tuple[int, float]] = []
 
-        neighbors = UserRecommendation.top_n_similar_users(user, similarity_function=similarity_function, n=neighbor_size)
+        neighbors = self.top_n_similar_users(user, similarity_function=similarity_function, n=neighbor_size)
 
         for movie_id in unrated_movies:
             # Predict the rating for the movie
-            predicted_rating = UserRecommendation.prediction_from_neighbors(user, movie_id, neighbors)
+            predicted_rating = self.prediction_from_neighbors(user, movie_id, neighbors)
             predicted_ratings.append((movie_id, predicted_rating))
 
         # Predicted ratings in descending order
@@ -205,8 +191,8 @@ class UserRecommendation:
         return predicted_ratings
     
     
-    @staticmethod
-    def top_n_recommendations(user: int, similarity_function = None, n: int = 10, neighbor_size: int = 50) -> list[tuple[int, float]]:
+    
+    def top_n_recommendations(self, user: int, similarity_function = None, n: int = 10, neighbor_size: int = 50) -> list[tuple[int, float]]:
         """
         Generates top N movie recommendations for a given user, excluding movies already rated by the user.
 
@@ -219,7 +205,7 @@ class UserRecommendation:
         Returns:
             List[tuple[int, float]]: List of tuples containing movie IDs and their predicted ratings.
         """
-        predicted_ratings = UserRecommendation.get_all_recommendations_for_user(user, similarity_function, neighbor_size)
+        predicted_ratings = self.get_all_recommendations_for_user(user, similarity_function, neighbor_size)
         
         return predicted_ratings[:n]
     

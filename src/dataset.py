@@ -3,38 +3,22 @@ import os
 
 class Dataset:
 
-    _instance = None
-
-    def __new__(cls, *args, **kwargs):
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-        return cls._instance
-
-    def __init__(self):
-        # List of CSV files to load as dataframes
-        self._dataframe_names = ['movies', 'ratings']
-
+    def __init__(self, ratings_df: pd.DataFrame):
+        self.ratings_df = ratings_df
+        self.movies_df = pd.read_csv(Dataset.get_dataset_path() + "movies.csv", 
+                                     converters={"genres": lambda x: x.strip("[]").replace("'","").split("|")})
         self._prepare()
 
 
     def _prepare(self):
-        self._dataframe: dict[int, pd.DataFrame] = {}
-
-        self._load_dataframes()
         self._init_movies()
         self._init_ratings()
-    
 
-    def _load_dataframes(self) -> None:
-        """
-        Loads CSV files into pandas dataframes.
-        """
+    @staticmethod
+    def get_dataset_path():
         # Define project and dataset paths
         project_folder = os.path.dirname(__file__) + '/../'
-        dataset_path = os.path.join(project_folder, 'dataset', 'movielens-edu')
-
-        self.movies_df = pd.read_csv(dataset_path + "/movies.csv", converters={"genres": lambda x: x.strip("[]").replace("'","").split("|")})
-        self.ratings_df = pd.read_csv(dataset_path + "/ratings.csv")
+        return os.path.join(project_folder, 'dataset', 'movielens-edu/')
 
 
     def _init_movies(self):
