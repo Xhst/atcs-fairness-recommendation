@@ -20,31 +20,31 @@ class Evaluation:
         return (df.iloc[:training_size], df.iloc[training_size:])
 
 
-    def evaluate_sim(sim, mae_points, mrse_points, training_set, test_set):
-        for k in range(5, 105, 5):
-            mae, mrse = Evaluation.evaluate(training_set, test_set, sim, k)
+    def evaluate_sim(sim: str, mae_points: dict[str, list[float]], rmse_points: dict[str, list[float]], training_set, test_set):
+        for k in range(5, 55, 5):
+            mae, rmse = Evaluation.evaluate(training_set, test_set, sim, k)
             mae_points[sim].append(mae)
-            mrse_points[sim].append(mrse)
+            rmse_points[sim].append(rmse)
 
 
-    def evaluate_similarities(similarities, training_set, test_set):
+    def evaluate_similarities(similarities, training_set, test_set) -> tuple[dict[str, list[float]], dict[str, list[float]]]:
         mae_points = defaultdict(list)
-        mrse_points = defaultdict(list)
+        rmse_points = defaultdict(list)
 
         threads = []
 
         for sim in similarities:
-            thread = Thread(target=Evaluation.evaluate_sim, args=(sim, mae_points, mrse_points, training_set, test_set))
+            thread = Thread(target=Evaluation.evaluate_sim, args=(sim, mae_points, rmse_points, training_set, test_set))
             thread.start()
             threads.append(thread)
 
         for thread in threads:
             thread.join()
 
-        return mae_points, mrse_points
+        return mae_points, rmse_points
 
 
-    def evaluate(training_df: pd.DataFrame, test_df: pd.DataFrame, similarity_function, neighbor_size):
+    def evaluate(training_df: pd.DataFrame, test_df: pd.DataFrame, similarity_function, neighbor_size) -> tuple[float, float]:
         training_ds = Dataset(training_df)
         test_ds = Dataset(test_df)
 
