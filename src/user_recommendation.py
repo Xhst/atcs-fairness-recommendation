@@ -205,7 +205,18 @@ class UserRecommendation:
         Returns:
             List[tuple[int, float]]: List of tuples containing movie IDs and their predicted ratings.
         """
-        predicted_ratings = self.get_all_recommendations_for_user(user, similarity_function, neighbor_size)
+        movies_predicted_ratings = self.get_all_recommendations_for_user(user, similarity_function, neighbor_size)
         
-        return predicted_ratings[:n]
+        # uncomment the following lines if you want to normalize the predicted ratings between 0 and 5
+        #
+        #predicted_ratings = [rating for _, rating in movies_predicted_ratings]
+        #
+        #normalized_rating = lambda rating: (rating - min(predicted_ratings)) / (max(predicted_ratings) - min(predicted_ratings))
+        #
+        # We transform the predicted ratings to the range 0-5
+        # We normalize them and multiply the result by 5
+        #transformed_movies_predicted_ratings = [(movie, normalized_rating(rating) * 5) for (movie, rating) in movies_predicted_ratings]
+        
+        return movies_predicted_ratings[:n]
+    
     
