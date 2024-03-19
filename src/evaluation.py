@@ -1,7 +1,10 @@
 import pandas as pd
 import numpy as np
+import math
 from dataset import Dataset
 from user_recommendation import UserRecommendation
+from collections import defaultdict 
+from threading import Thread
 
 class Evaluation:
 
@@ -13,38 +16,70 @@ class Evaluation:
 
         df_size = len(df)
         training_size = int(df_size * percentage)
-        test_size = df_size - training_size
 
-        return (df.iloc[:training_size], df.iloc[test_size:])
-    
+        return (df.iloc[:training_size], df.iloc[training_size:])
+
+
+    def evaluate_sim(sim, mae_points, mrse_points, training_set, test_set):
+        for k in range(5, 105, 5):
+            mae, mrse = Evaluation.evaluate(training_set, test_set, sim, k)
+            mae_points[sim].append(mae)
+            mrse_points[sim].append(mrse)
+
+
+    def evaluate_similarities(similarities, training_set, test_set):
+        mae_points = defaultdict(list)
+        mrse_points = defaultdict(list)
+
+        threads = []
+
+        for sim in similarities:
+            thread = Thread(target=Evaluation.evaluate_sim, args=(sim, mae_points, mrse_points, training_set, test_set))
+            thread.start()
+            threads.append(thread)
+
+        for thread in threads:
+            thread.join()
+
+        return mae_points, mrse_points
+
 
     def evaluate(training_df: pd.DataFrame, test_df: pd.DataFrame, similarity_function, neighbor_size):
-        #for each (userId,movieId,rating) in test_df
-        #    sim with userId and user2 in training_df
-        #    prediction user in test_df
-        #    for each prediction measure Error (MSE, MRSE, ACCURACY, ROC, AUC)
-        # order sim with Error
-
-        
-
         training_ds = Dataset(training_df)
         test_ds = Dataset(test_df)
 
         training_user_rec = UserRecommendation(training_ds)
 
-        prediction_errors = []
+        num_errors = 0
+        mae_prediction_errors = 0
+        rmse_prediction_error = 0
 
         for test_user, movie_to_ratings in test_ds._user_to_movie_ratings.items():
             if not training_ds.has_user(test_user):
                 continue
+            
+            if similarity_function == 'jaccard':
+                sim = training_user_rec.sim_jaccard
+            elif similarity_function == 'pcc_jaccard':
+                sim = training_user_rec.sim_wpcc_jaccard
+            else:
+                sim = training_user_rec.sim_pcc
 
-            neighbors = training_user_rec.top_n_similar_users(test_user, training_user_rec.sim_wpcc_jaccard, neighbor_size)
+            neighbors = training_user_rec.top_n_similar_users(test_user, sim, neighbor_size)
             
             for movie, real_rating in movie_to_ratings.items():
                 pred_rating = training_user_rec.prediction_from_neighbors(test_user, movie, neighbors)
-                prediction_errors.append(abs(pred_rating - real_rating))
+                
+                mae_prediction_errors += abs(pred_rating - real_rating)
+                rmse_prediction_error += (pred_rating - real_rating) ** 2
+                num_errors += 1
 
-        return np.mean(prediction_errors)
+        if num_errors == 0: return 0, 0
+
+        mae = mae_prediction_errors / num_errors
+        rmse = math.sqrt(rmse_prediction_error / num_errors)
+
+        return mae, rmse
 
 
                 
