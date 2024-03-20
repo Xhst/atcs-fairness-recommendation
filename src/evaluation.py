@@ -6,45 +6,35 @@ from user_recommendation import UserRecommendation
 from collections import defaultdict 
 from threading import Thread
 
-
 class Evaluation:
 
-    def split_dataset(df: pd.DataFrame, n_splits: int, shuffle: bool = True) -> list[pd.DataFrame]:
+    def split_dataset(df: pd.DataFrame, percentage: float, shuffle: bool = True):
+        percentage = max(0, min(1, percentage))
         
         if shuffle:
             df = df.sample(frac=1)
-            
-        split_size = len(df) // n_splits
-        splits = [df[i:i+split_size] for i in range(0, len(df), split_size)]
-        
-        # If there are elements left over, add them to the last split
-        if len(splits) > n_splits:
-            splits[-1] = pd.concat([splits[-1], splits[-2]])
-            splits.pop(-2)
-        
-        return splits
+
+        df_size = len(df)
+        training_size = int(df_size * percentage)
+
+        return (df.iloc[:training_size], df.iloc[training_size:])
 
 
-    def evaluate_sim(sim: str, mae_points: dict[str, list[float]], rmse_points: dict[str, list[float]], splits: list[pd.DataFrame]):
+    def evaluate_sim(sim, mae_points: dict[str, list[float]], rmse_points: dict[str, list[float]], training_set, test_set):
         for k in range(5, 55, 5):
-            test_index = int((k/5 - 1) % len(splits))
-            print(f"Testing similarity {sim} with k={k} on test split {test_index}")
-            current_test = splits[test_index]
-            current_training = pd.concat([splits[i] for i in range(len(splits)) if i != test_index])
-            
-            mae, rmse = Evaluation.evaluate(current_training, current_test, sim, k)
+            mae, rmse = Evaluation.evaluate(training_set, test_set, sim, k)
             mae_points[sim].append(mae)
             rmse_points[sim].append(rmse)
 
 
-    def evaluate_similarities(similarities, splits: list[pd.DataFrame]) -> tuple[dict[str, list[float]], dict[str, list[float]]]:
+    def evaluate_similarities(similarities, training_set, test_set):
         mae_points = defaultdict(list)
         rmse_points = defaultdict(list)
 
-        threads = []
+        threads: list[Thread] = []
 
         for sim in similarities:
-            thread = Thread(target=Evaluation.evaluate_sim, args=(sim, mae_points, rmse_points, splits))
+            thread = Thread(target=Evaluation.evaluate_sim, args=(sim, mae_points, rmse_points, training_set, test_set))
             thread.start()
             threads.append(thread)
 
@@ -54,7 +44,7 @@ class Evaluation:
         return mae_points, rmse_points
 
 
-    def evaluate(training_df: pd.DataFrame, test_df: pd.DataFrame, similarity_function, neighbor_size) -> tuple[float, float]:
+    def evaluate(training_df: pd.DataFrame, test_df: pd.DataFrame, similarity_function, neighbor_size):
         training_ds = Dataset(training_df)
         test_ds = Dataset(test_df)
 
@@ -79,8 +69,6 @@ class Evaluation:
             
             for movie, real_rating in movie_to_ratings.items():
                 pred_rating = training_user_rec.prediction_from_neighbors(test_user, movie, neighbors)
-                
-                pred_rating = min(5, pred_rating)
                 
                 mae_prediction_errors += abs(pred_rating - real_rating)
                 rmse_prediction_error += (pred_rating - real_rating) ** 2
