@@ -13,7 +13,7 @@ class SequentialRecommendation:
     # the couples to consider when running the "fair" method for the next group recommendation
     # i.e if we considered user x and y, and we calculate user z and w are dissagreing the most
     #     we then consider the couple z and w for the next group recommendation
-    def get_sequential_recommendations_for_group(self, userGroup: list[int], ser_len: int = 5) -> dict[int, list[tuple[int, float]]]:
+    def get_sequential_recommendations_for_group(self, userGroup: list[int], seq_len: int = 5) -> dict[int, list[tuple[int, float]]]:
         """
         Get sequential recommendations of certain length for a group of users.
 
@@ -28,7 +28,7 @@ class SequentialRecommendation:
         #giusto?
         sequential_recommendations: dict[int, list[tuple[int, float]]] = defaultdict(list[tuple[int, float]])
         
-        for i in range(ser_len):
+        for i in range(seq_len):
             group_recommendation = self.group_recommendation.weighted_average_aggregation(userGroup)
             
             fairer_group_recommendation = group_recommendation
