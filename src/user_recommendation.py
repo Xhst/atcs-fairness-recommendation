@@ -23,6 +23,8 @@ class UserRecommendation:
         # Find common movies rated by both users
         common_movies = self.dataset.get_common_movies(user1, user2)
 
+        if len(common_movies) == 0: return 0
+
         # Calculate Pearson correlation coefficient
         numerator = 0
         denominator1 = 0
