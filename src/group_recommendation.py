@@ -92,6 +92,23 @@ class GroupRecommendation:
 
         return least_misery_rec[:n]
     
+
+    def get_disagreement_weight(self, ratings: list[float]) -> float:
+        """
+        Calculate the disagreement weight based on the standard deviation of ratings.
+
+        This method computes the disagreement weight, which represents the inverse of
+        the standard deviation of a list of ratings.
+
+        Args:
+            ratings (list[float]): List of ratings.
+
+        Returns:
+            float: Disagreement weight, calculated as 1 divided by the standard deviation
+                of the ratings, with a small constant added to avoid division by zero.
+        """
+        return 1 / (np.std(ratings) + 0.0001)
+    
     
     def weighted_average_aggregation(self, users: set[int], n: int = 10) -> list[tuple[int, float]]:
         """
@@ -112,10 +129,7 @@ class GroupRecommendation:
         w_avg_rec: list[tuple[int, float]] = []
 
         for movie, predicted_ratings in users_rec.items():
-            std_dev_ratings = np.std(predicted_ratings)
-            # We calculate the disagreement weight as 1 over the standard deviation of the predicted ratings
-            # We add a small value to avoid division by zero
-            disagreement_weight = 1 / (std_dev_ratings + 0.0001)
+            disagreement_weight = self.get_disagreement_weight(predicted_ratings)
  
             average = sum(predicted_ratings) / len(predicted_ratings)
             w_average = average * disagreement_weight
