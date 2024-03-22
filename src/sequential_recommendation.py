@@ -1,69 +1,78 @@
 from collections import defaultdict
 from group_recommendation import GroupRecommendation
-import random
-
+import operator
 
 class SequentialRecommendation:
     def __init__(self, group_recommendation: GroupRecommendation):
         self.group_recommendation = group_recommendation
 
 
-    # maybe get every group recommendation with the "fair" method (see last slides)
-    # and then we  calculate the disagreemnt for each group recommendation and we change 
-    # the couples to consider when running the "fair" method for the next group recommendation
-    # i.e if we considered user x and y, and we calculate user z and w are dissagreing the most
-    #     we then consider the couple z and w for the next group recommendation
-    def get_sequential_recommendations_for_group(self, userGroup: list[int], seq_len: int = 5) -> dict[int, list[tuple[int, float]]]:
+    def get_sequential_recommendations_for_group(self, user_group: set[int], iterations: int = 5) -> dict[int, list[tuple[int, float]]]:
         """
         Get sequential recommendations of certain length for a group of users.
 
         Args:
-            userGroup (list[int]): List of user IDs.
+            user_group (list[int]): List of user IDs.
             ser_len (int): Amount of group recommendations in a sequential for a group. Defaults to 5.
 
         Returns:
             list[tuple[int, float]]: list of tuples containing sequential ID and the recommendetions for the group.
         """
-        
-        #giusto?
+        # We don't want to recommend movies from previous iterations
+        already_recommended = []
+
+        # sequential_recommendations: iteration -> list[(movieId, rating)]
         sequential_recommendations: dict[int, list[tuple[int, float]]] = defaultdict(list[tuple[int, float]])
-        
-        for i in range(seq_len):
-            group_recommendation = self.group_recommendation.weighted_average_aggregation(userGroup)
-            
-            fairer_group_recommendation = group_recommendation
-            
-            if i != 0:
-                # get the most disagreeing users
-                # and change the couples to consider for the next group recommendation
-                # (or do something, consider disagreement nonetheless)
-                fairer_group_recommendation = self.transform_group_recomm_to_fair(group_recommendation)
-            
-            sequential_recommendations[i] = fairer_group_recommendation
-        
-        return sequential_recommendations
-    
-    
-    def transform_group_recomm_to_fair(self, group_recommendations: list[tuple[int, float]]) -> list[tuple[int, float]]:
-        """
-        Tries to transform group recommendations to be more fair for certain users who were disagreeing the most with
-        the recommendations given in the past.
 
-        Args:
-            group_recommendations (list[tuple[int, float]]): List of tuples containing movie ID and average predicted rating.
-            userGroup (list[int]): List of user IDs.
+        # satisfactions: iteration -> list[(userId, satisfaction)]
+        satisfactions: dict[int, list[tuple[int, float]]] = defaultdict(list[tuple[int, float]])
 
-        Returns:
-            list[tuple[int, float]]: list of tuples containing movie ID and average predicted rating.
-        """
-        # get the most disagreeing users
-        # and change the couples to consider for the next group recommendation
-        # (or do something, consider disagreement nonetheless)
+        for i in range(iterations):
+            # Aggregate recommendations for the current iteration, excluding movies from previous iterations
+            users_rec = self.group_recommendation.users_top_recommendations(user_group, exclude_movies=already_recommended)
+            aggreg_rec = self.group_recommendation.aggregate_users_recommendations(users_rec)
+
+            if i == 0:
+                group_rec = self.group_recommendation.weighted_average_aggregation_from_users_recommendations(aggreg_rec)
+            else:
+                group_rec = self.aggregation_from_users_recommendations_and_satisfaction(aggreg_rec, satisfactions[i-1])
+
+            satisfactions[i] = self.calculate_satisfactions(user_group, users_rec, group_rec, aggreg_rec)
+
+            already_recommended.extend(movie for movie, _ in group_rec)
+            sequential_recommendations[i] = group_rec
         
-        fairer_group_recommendation = [(movie, rating * (random.random())) 
-                                       for movie, rating in group_recommendations]
+        return sequential_recommendations, satisfactions
+    
+
+    def calculate_satisfactions(self, group: set[int], users_rec: dict[int, list[tuple[int, float]]], group_rec: list[tuple[int, float]], 
+                                aggreg_rec: dict[int, list[float]]):
+        satisfactions: list[tuple[int, float]] = []
         
-        fairer_group_recommendation.sort(key=lambda x: x[1], reverse=True)
+        group_movies = set(map(operator.itemgetter(0), group_rec))
         
-        return fairer_group_recommendation
+        for index, user in enumerate(group):
+            group_val = sum(aggreg_rec[movie][index] for movie in group_movies)
+            user_val = sum(rating for _, rating in users_rec[user])
+            user_sat = group_val / user_val
+
+            satisfactions.append((user, user_sat))
+
+        return satisfactions
+
+
+    def aggregation_from_users_recommendations_and_satisfaction(self, aggreg_rec: dict[int, list[float]],
+                                                                satisfactions: list[tuple[int, float]], n: int = 10) -> list[tuple[int, float]]:
+            aggregated_ratings = defaultdict(float)
+            satisfaction_weights = [sat for _, sat in satisfactions]
+
+            # Weighted aggregation of recommendations based on user satisfaction
+            for movie_id, ratings in aggreg_rec.items():
+                for user_id, rating in enumerate(ratings):
+                    aggregated_ratings[movie_id] += rating * (1 - satisfaction_weights[user_id])
+
+            # Sort recommendations by aggregated weighted rating
+            sorted_recommendations = sorted(aggregated_ratings.items(), key=lambda x: x[1], reverse=True)
+
+            return sorted_recommendations[:n]
     
