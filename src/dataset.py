@@ -68,6 +68,7 @@ class Dataset:
         """
         return self._user_to_movie_ratings[user_id].get(movie_id) != None
     
+    
     def has_user(self, user_id: int) -> bool:
         return self._user_to_movie_ratings.get(user_id) != None
 
