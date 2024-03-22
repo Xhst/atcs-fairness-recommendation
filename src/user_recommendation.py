@@ -163,7 +163,8 @@ class UserRecommendation:
     
     
     
-    def get_all_recommendations_for_user(self, user: int, similarity_function = None, neighbor_size: int = 50) -> list[tuple[int, float]]:
+    def get_all_recommendations_for_user(self, user: int, similarity_function = None, 
+                                         neighbor_size: int = 50, exclude_movies: set[int] = set()) -> list[tuple[int, float]]:
         """
         Get all movie recommendations for a user.
 
@@ -183,6 +184,8 @@ class UserRecommendation:
         neighbors = self.top_n_similar_users(user, similarity_function=similarity_function, n=neighbor_size)
 
         for movie_id in unrated_movies:
+            if movie_id in exclude_movies:
+                continue
             # Predict the rating for the movie
             predicted_rating = self.prediction_from_neighbors(user, movie_id, neighbors)
             predicted_ratings.append((movie_id, predicted_rating))
@@ -194,7 +197,8 @@ class UserRecommendation:
     
     
     
-    def top_n_recommendations(self, user: int, similarity_function = None, n: int = 10, neighbor_size: int = 50) -> list[tuple[int, float]]:
+    def top_n_recommendations(self, user: int, similarity_function = None, n: int = 10, 
+                              neighbor_size: int = 50, exclude_movies: set[int] = set()) -> list[tuple[int, float]]:
         """
         Generates top N movie recommendations for a given user, excluding movies already rated by the user.
 
@@ -207,7 +211,7 @@ class UserRecommendation:
         Returns:
             List[tuple[int, float]]: List of tuples containing movie IDs and their predicted ratings.
         """
-        movies_predicted_ratings = self.get_all_recommendations_for_user(user, similarity_function, neighbor_size)
+        movies_predicted_ratings = self.get_all_recommendations_for_user(user, similarity_function, neighbor_size, exclude_movies)
         
         # uncomment the following lines if you want to normalize the predicted ratings between 0 and 5
         #
