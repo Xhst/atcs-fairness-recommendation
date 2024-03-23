@@ -1,6 +1,7 @@
 import dataset
 import math 
 from typing import Callable
+import numpy as np
 
 # UserBasedCollaborativeFiltering
 class UserRecommendation:    
@@ -23,28 +24,28 @@ class UserRecommendation:
         # Find common movies rated by both users
         common_movies = self.dataset.get_common_movies(user1, user2)
 
-        if len(common_movies) == 0: return 0
+        # Check if there are no common movies or if one user has rated all movies the same
+        if len(common_movies) == 0:
+            return 0  # Return 0 correlation when there are no common movies
 
-        # Calculate Pearson correlation coefficient
-        numerator = 0
-        denominator1 = 0
-        denominator2 = 0
+        # Calculate mean ratings for both users
+        mean_rating_user1 = sum(self.dataset.get_rating(user1, movie) for movie in common_movies) / len(common_movies)
+        mean_rating_user2 = sum(self.dataset.get_rating(user2, movie) for movie in common_movies) / len(common_movies)
 
-        for movie in common_movies:
-            user1_mean_centered_movie_rating = self.dataset.get_rating_mean_centered(user1, movie)
-            user2_mean_centered_movie_rating = self.dataset.get_rating_mean_centered(user2, movie)
+        # Calculate numerator and denominators for Pearson correlation coefficient formula
+        numerator = np.sum((self.dataset.get_rating(user1, movie) - mean_rating_user1) *
+                        (self.dataset.get_rating(user2, movie) - mean_rating_user2) for movie in common_movies)
+        denominator_user1 = np.sum((self.dataset.get_rating(user1, movie) - mean_rating_user1) ** 2 for movie in common_movies)
+        denominator_user2 = np.sum((self.dataset.get_rating(user2, movie) - mean_rating_user2) ** 2 for movie in common_movies)
 
-            numerator += user1_mean_centered_movie_rating * user2_mean_centered_movie_rating
-            
-            denominator1 += user1_mean_centered_movie_rating ** 2
-            denominator2 += user2_mean_centered_movie_rating ** 2
+        # Handle division by zero (when one of the users has rated all movies the same)
+        if denominator_user1 == 0 or denominator_user2 == 0:
+            return 0  # Return 0 correlation when division by zero occurs
 
-        denominator = math.sqrt(denominator1) * math.sqrt(denominator2)
+        # Compute Pearson correlation coefficient
+        correlation_coefficient = numerator / math.sqrt(denominator_user1) * math.sqrt(denominator_user2)
 
-        if denominator == 0: return 0
-
-        return numerator / denominator
-    
+        return correlation_coefficient
     
     
     def sim_wpcc(self, user1: int, user2: int, weight: Callable[[int, int], float]) -> float:
