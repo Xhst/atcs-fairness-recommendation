@@ -67,6 +67,8 @@ class Evaluation:
                 sim = training_user_rec.sim_euclidean
             elif similarity_function == 'pcc_jaccard':
                 sim = training_user_rec.sim_wpcc_jaccard
+            elif similarity_function == 'acosine_jaccard':
+                sim = training_user_rec.sim_acosine_jaccard
             else:
                 sim = training_user_rec.sim_pcc
 

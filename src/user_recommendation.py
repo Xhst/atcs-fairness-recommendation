@@ -76,6 +76,9 @@ class UserRecommendation:
         return similarity
     
 
+    
+
+
     def sim_pcc(self, user1: int, user2: int) -> float:
         """
         Computes the Pearson Correlation Coefficient between two users based on their ratings.
@@ -231,6 +234,19 @@ class UserRecommendation:
         """
         return self.sim_pcc(user1, user2) * self.sim_jaccard(user1, user2)
     
+    
+    def sim_acosine_jaccard(self, user1: int, user2: int):
+        """
+        Computes Pearson correlation coefficient (PCC) weighted with the Jaccard similarity coefficient between two users.
+
+        Args:
+            user1 (int): ID of the first user.
+            user2 (int): ID of the second user.
+
+        Returns:
+            float: Weighted product of PCC and Jaccard similarity between the two users.
+        """
+        return self.sim_acosine(user1, user2) * self.sim_jaccard(user1, user2)
 
     
     def prediction_from_neighbors(self, user: int, movie: int, neighbors: list[tuple[int, float]]) -> float:
