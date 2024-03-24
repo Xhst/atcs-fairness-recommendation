@@ -5,7 +5,7 @@ class Dataset:
 
     def __init__(self, ratings_df: pd.DataFrame):
         self.ratings_df = ratings_df
-        self.movies_df = pd.read_csv(Dataset.get_dataset_path() + "movies.csv", 
+        self.movies_df = pd.read_csv(Dataset.get_dataset_path() + "/movielens-edu/movies.csv", 
                                      converters={"genres": lambda x: x.strip("[]").replace("'","").split("|")})
         self._prepare()
 
@@ -19,7 +19,7 @@ class Dataset:
     def get_dataset_path():
         # Define project and dataset paths
         project_folder = os.path.dirname(__file__) + '/../'
-        return os.path.join(project_folder, 'dataset', 'movielens-edu/')
+        return os.path.join(project_folder, 'dataset')
 
 
     def _init_movies(self):
