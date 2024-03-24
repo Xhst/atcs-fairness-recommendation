@@ -42,41 +42,6 @@ class GroupRecommendation:
                 aggregate_recommendations[movie].append(self.user_recommendation.prediction_from_neighbors(user, movie, neighbors))
 
         return aggregate_recommendations
-        
-    '''def aggregate_users_recommendations(self, users: set[int], n: int = 10, neighbor_size: int = 50, exclude_movies: set[int] = set()) -> dict[int, list[float]]:
-        """
-        Aggregate recommendations from a set of users.
-
-        Args:
-            users (set[int]): Set of user IDs.
-            n (int): Number of recommendations per user. Defaults to 10.
-            neighbor_size (int): Size of the neighborhood for recommendation. Defaults to 50.
-
-        Returns:
-            dict[int, list[float]]: Dictionary where keys are movie IDs and values are lists of predicted ratings.
-        """
-        movies: set[int] = set()
-        aggregate_recommendations: dict[int, list[float]] = defaultdict(list[float])
-
-        # find top n recommended movies for each user
-        for user in users:
-            user_recommendations = self.user_recommendation.top_n_recommendations(user, n=n, neighbor_size=neighbor_size, exclude_movies=exclude_movies)
-
-            for (movie, _) in user_recommendations:
-                movies.add(movie)
-
-        # aggregate predictions for each movie
-        for user in users:
-            neighbors = self.user_recommendation.top_n_similar_users(user, n=neighbor_size)
-            for movie in movies:
-                # Take the rating from the user if the user has rated the movie
-                if self.user_recommendation.dataset.has_user_rated_movie(user, movie):
-                    aggregate_recommendations[movie].append(self.user_recommendation.dataset.get_rating(user, movie))
-                    continue
-                # Otherwise, predict the rating
-                aggregate_recommendations[movie].append(self.user_recommendation.prediction_from_neighbors(user, movie, neighbors))
-
-        return aggregate_recommendations'''
 
     
     def average_aggregation(self, users: set[int], n: int = 10) -> list[tuple[int, float]]:
@@ -91,16 +56,20 @@ class GroupRecommendation:
         Returns:
             list[tuple[int, float]]: List of tuples containing movie ID and average predicted rating.
         """
-        users_rec = self.aggregate_users_recommendations(users)
+        aggreg_rec = self.aggregate_users_recommendations(users)
 
+        return self.average_aggregation_from_users_recommendations(aggreg_rec, n)
+    
+    
+    def average_aggregation_from_users_recommendations(self, aggreg_rec: dict[int, list[float]], n: int = 10) -> list[tuple[int, float]]:
         avg_rec: list[tuple[int, float]] = []
 
-        for movie, predicted_ratings in users_rec.items():
+        for movie, predicted_ratings in aggreg_rec.items():
             average = sum(predicted_ratings) / len(predicted_ratings)
             avg_rec.append((movie, average))
         
         avg_rec.sort(key=lambda x: x[1], reverse=True)
-
+        
         return avg_rec[:n]
 
     
@@ -116,15 +85,19 @@ class GroupRecommendation:
         Returns:
             list[tuple[int, float]]: List of tuples containing movie ID and minimum predicted rating.
         """
-        users_rec = self.aggregate_users_recommendations(users)
+        aggreg_rec = self.aggregate_users_recommendations(users)
 
+        return self.least_misery_aggregation_from_users_recommendations(aggreg_rec, n)
+    
+    
+    def least_misery_aggregation_from_users_recommendations(self, aggreg_rec: dict[int, list[float]], n: int = 10) -> list[tuple[int, float]]:
         least_misery_rec: list[tuple[int, float]] = []
 
-        for movie, predicted_ratings in users_rec.items():
+        for movie, predicted_ratings in aggreg_rec.items():
             least_misery_rec.append((movie, min(predicted_ratings)))
-
+        
         least_misery_rec.sort(key=lambda x: x[1], reverse=True)
-
+        
         return least_misery_rec[:n]
     
 
@@ -159,15 +132,15 @@ class GroupRecommendation:
         Returns:
             list[tuple[int, float]]: List of tuples containing movie ID and weighted average predicted rating.
         """
-        users_rec = self.aggregate_users_recommendations(users)
+        aggreg_rec = self.aggregate_users_recommendations(users)
 
-        return self.weighted_average_aggregation_from_users_recommendations(users_rec, n)
+        return self.weighted_average_aggregation_from_users_recommendations(aggreg_rec, n)
 
 
-    def weighted_average_aggregation_from_users_recommendations(self, users_rec: dict[int, list[float]], n: int = 10) -> list[tuple[int, float]]:
+    def weighted_average_aggregation_from_users_recommendations(self, aggreg_rec: dict[int, list[float]], n: int = 10) -> list[tuple[int, float]]:
         w_avg_rec: list[tuple[int, float]] = []
 
-        for movie, predicted_ratings in users_rec.items():
+        for movie, predicted_ratings in aggreg_rec.items():
             disagreement_weight = self.get_disagreement_weight(predicted_ratings)
  
             average = sum(predicted_ratings) / len(predicted_ratings)
