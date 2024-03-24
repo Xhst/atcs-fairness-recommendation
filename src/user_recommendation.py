@@ -10,6 +10,72 @@ class UserRecommendation:
         self.dataset = dataset
 
 
+    def sim_cosine(self, user1: int, user2: int) -> float:
+        """
+        Computes the Cosine Similarity between two users based on their ratings.
+
+        Args:
+            user1 (int): ID of the first user.
+            user2 (int): ID of the second user.
+
+        Returns:
+            float: Cosine Similarity between the two users.
+        """
+        # Find common movies rated by both users
+        common_movies = self.dataset.get_common_movies(user1, user2)
+
+        # Check if there are no common movies
+        if len(common_movies) == 0:
+            return 0  # Return 0 similarity when there are no common movies
+
+        numerator = sum(self.dataset.get_rating(user1, movie) * self.dataset.get_rating(user2, movie) for movie in common_movies)
+        denominator_user1 = math.sqrt(sum(self.dataset.get_rating(user1, movie) ** 2 for movie in common_movies))
+        denominator_user2 = math.sqrt(sum(self.dataset.get_rating(user2, movie) ** 2 for movie in common_movies))
+
+        # Handle division by zero
+        if denominator_user1 == 0 or denominator_user2 == 0:
+            return 0  # Return 0 similarity when division by zero occurs
+
+        # Compute Cosine Similarity
+        similarity = numerator / (denominator_user1 * denominator_user2)
+
+        return similarity
+    
+
+    def sim_acosine(self, user1: int, user2: int) -> float:
+        """
+        Computes the Adjusted Cosine Similarity between two users based on their ratings.
+
+        Args:
+            user1 (int): ID of the first user.
+            user2 (int): ID of the second user.
+
+        Returns:
+            float: Adjusted Cosine Similarity between the two users.
+        """
+        # Find common movies rated by both users
+        common_movies = self.dataset.get_common_movies(user1, user2)
+
+        # Check if there are no common movies
+        if len(common_movies) == 0:
+            return 0  # Return 0 similarity when there are no common movies
+
+        # Calculate numerator and denominators for Adjusted Cosine Similarity formula
+        numerator = sum((self.dataset.get_rating_mean_centered(user1, movie)) *
+                        (self.dataset.get_rating_mean_centered(user2, movie)) for movie in common_movies)
+        denominator_user1 = math.sqrt(sum((self.dataset.get_rating_mean_centered(user1, movie)) ** 2 for movie in common_movies))
+        denominator_user2 = math.sqrt(sum((self.dataset.get_rating_mean_centered(user2, movie)) ** 2 for movie in common_movies))
+
+        # Handle division by zero
+        if denominator_user1 == 0 or denominator_user2 == 0:
+            return 0  # Return 0 similarity when division by zero occurs
+
+        # Compute Adjusted Cosine Similarity
+        similarity = numerator / (denominator_user1 * denominator_user2)
+
+        return similarity
+    
+
     def sim_pcc(self, user1: int, user2: int) -> float:
         """
         Computes the Pearson Correlation Coefficient between two users based on their ratings.
@@ -46,6 +112,81 @@ class UserRecommendation:
         correlation_coefficient = numerator / math.sqrt(denominator_user1) * math.sqrt(denominator_user2)
 
         return correlation_coefficient
+    
+
+    def sim_manhattan(self, user1: int, user2: int) -> float:
+        """
+        Computes the Manhattan Distance similarity between two users based on their ratings.
+
+        Args:
+            user1 (int): ID of the first user.
+            user2 (int): ID of the second user.
+
+        Returns:
+            float: Manhattan Distance similarity between the two users.
+        """
+        # Find common movies rated by both users
+        common_movies = self.dataset.get_common_movies(user1, user2)
+
+        # Check if there are no common movies
+        if len(common_movies) == 0:
+            return 0  # Return 0 similarity when there are no common movies
+
+        distance = sum(abs(self.dataset.get_rating(user1, movie) - self.dataset.get_rating(user2, movie)) for movie in common_movies)
+        similarity = 1 / (1 + distance)
+
+        return similarity
+
+
+    def sim_euclidean(self, user1: int, user2: int) -> float:
+        """
+        Computes the Euclidean Distance similarity between two users based on their ratings.
+
+        Args:
+            user1 (int): ID of the first user.
+            user2 (int): ID of the second user.
+
+        Returns:
+            float: Euclidean Distance similarity between the two users.
+        """
+        # Find common movies rated by both users
+        common_movies = self.dataset.get_common_movies(user1, user2)
+
+        # Check if there are no common movies
+        if len(common_movies) == 0:
+            return 0  # Return 0 similarity when there are no common movies
+
+        distance = math.sqrt(sum((self.dataset.get_rating(user1, movie) - self.dataset.get_rating(user2, movie)) ** 2 for movie in common_movies))
+        similarity = 1 / (1 + distance)
+
+        return similarity
+    
+
+    def sim_chebyshev(self, user1: int, user2: int) -> float:
+        """
+        Computes the similarity between two users based on the Chebyshev distance.
+
+        Args:
+            user1 (int): ID of the first user.
+            user2 (int): ID of the second user.
+
+        Returns:
+            float: Similarity between the two users based on the Chebyshev distance.
+        """
+        # Find common movies rated by both users
+        common_movies = self.dataset.get_common_movies(user1, user2)
+
+        # Check if there are no common movies
+        if len(common_movies) == 0:
+            return 0  # Return 0 similarity when there are no common movies
+
+        # Calculate Chebyshev distance
+        max_difference = max(abs(self.dataset.get_rating(user1, movie) - self.dataset.get_rating(user2, movie)) for movie in common_movies)
+
+        # Compute similarity
+        similarity = 1 / (1 + max_difference)
+
+        return similarity
     
     
     def sim_wpcc(self, user1: int, user2: int, weight: Callable[[int, int], float]) -> float:
