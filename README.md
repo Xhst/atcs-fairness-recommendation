@@ -16,7 +16,7 @@ Project for the lessons on **Fairness Recommendation**, held by professor **Kost
 - The `/src` folder contains the source code and the jupyther notebooks for the assignments.
 - The `/dataset` folder contains the [Movielens](https://grouplens.org/datasets/movielens/) (recommended for education and development) dataset files.
 
-## Execute
+## ▶️ Execution
 To install the virtual environment with the necessary libraries:
 ```
 python3 -m venv venv
