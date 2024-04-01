@@ -17,10 +17,26 @@ Project for the lessons on **Fairness Recommendation**, held by professor **Kost
 - The `/dataset` folder contains the [Movielens](https://grouplens.org/datasets/movielens/) (recommended for education and development) dataset files.
 
 ## ▶️ Execution
-To install the virtual environment with the necessary libraries:
+The following steps are used to setup the virtual environment with the necessary libraries.
+
+If you don't have the virtualenv installed:
 ```
-python3 -m venv venv
-venv/bin/activate
+pip install virtualenv
+```
+Create the virtual environment with:
+```
+virtualenv .venv
+```
+Then activate the virtual environment execute:
+```
+. .venv/bin/activate
+```
+Or (on windows):
+```
+.venv/Scripts/activate.bat
+```
+Finally get the libraries with:
+```
 pip install -r requirements.txt
 ```
 
